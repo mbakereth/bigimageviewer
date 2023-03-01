@@ -38,9 +38,11 @@ class BigImageComponent(QLabel):
     """
     Qt widget for displaying an image
 
-    Allows scrolling, with click and drag, zooming in with the + key and out
-    with the - key.  Zooming will be centered on the point in the image 
-    under the mouse where the key was pressed.
+    Allows scrolling, with click and drag.
+
+    Zooming in with the + key or double-click.  Zooming out is
+    with the - key or shift-double-click.  Zooming will be centered on the
+    point in the image under the mouse where the key was pressed.
 
     Pressing the q key exits the application.
 
@@ -57,7 +59,6 @@ class BigImageComponent(QLabel):
     DEFAULT_ZOOM_IN_KEY = Qt.Key.Key_Plus
     DEFAULT_ZOOM_OUT_KEY = Qt.Key.Key_Minus
     DEFAULT_EXIT_KEY = Qt.Key.Key_Q
-
 
     def __init__(self, parent=None, width=512, height=512):
         """
@@ -219,17 +220,17 @@ class BigImageComponent(QLabel):
                 qrect.width() + qrect.x(),
                 qrect.height() + qrect.y())
 
-    def mousePressEvent(self, e):
+    def mousePressEvent(self, event):
         """
         Clicking focuses the window so that it can receive keystrokes.
 
         It also remembers the point it was clicked at to start the scrolling
         """
-        if (e.buttons() == Qt.LeftButton):
-            self._mouse_drag_from_pos = e.position()
+        if (event.buttons() == Qt.LeftButton):
+            self._mouse_drag_from_pos = event.position()
         self.setFocus()
 
-    def mouseReleaseEvent(self, e):
+    def mouseReleaseEvent(self, event):
         """ Stops scrolling """
         self._mouse_drag_from_pos = None
 
@@ -241,6 +242,29 @@ class BigImageComponent(QLabel):
         dy = e.pixelDelta().y()
         if (dx != 0 or dy != 0):
             self._scroll(dx, dy)
+
+    def mouseDoubleClickEvent(self, event):
+        """
+        Double-click without modifiers zooms in, centered on the clicked
+        position.
+        Shift-Double-Click zooms out at the clicked position.
+        """
+        x = int(event.position().x())
+        y = int(event.position().y())
+        changed = False
+        if (event.buttons() == Qt.LeftButton):
+            if (event.modifiers() == Qt.KeyboardModifier.ShiftModifier):
+                # zoom out
+                changed \
+                    = self._loaded_image.zoom_to(self._loaded_image.zoom-1,
+                                                 x, y)
+            else:
+                # zoom in
+                changed \
+                    = self._loaded_image.zoom_to(self._loaded_image.zoom+1,
+                                                 x, y)
+        if (changed):
+            self._redraw_image()
 
     def keyPressEvent(self, event):
         """ Handles zoom in, zoom out and exit key presses """
@@ -259,13 +283,16 @@ class BigImageComponent(QLabel):
             sys.exit(0)
 
         if (changed):
-            self._qimage, qrect = self._loaded_image.to_qimage()
-            self._image_label.setPixmap(QPixmap.fromImageInPlace(self._qimage))
-            self._image_label.setGeometry(
-                -qrect.x(), -qrect.y(),
-                qrect.width() + qrect.x(),
-                qrect.height()+qrect.y()
-            )
+            self._redraw_image()
+
+    def _redraw_image(self):
+        self._qimage, qrect = self._loaded_image.to_qimage()
+        self._image_label.setPixmap(QPixmap.fromImageInPlace(self._qimage))
+        self._image_label.setGeometry(
+            -qrect.x(), -qrect.y(),
+            qrect.width() + qrect.x(),
+            qrect.height()+qrect.y()
+        )
 
     def resizeEvent(self, event):
         """ Ensures the right amount of image is loaded as the window is

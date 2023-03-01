@@ -146,6 +146,11 @@ class LoadedImage:
                      The range of zooms is dependent on the image
                      implementation
         """
+        if (value != -1):
+            if (value < self._image.min_zoom):
+                value = self._image.min_zoom
+            if (value > self._image.max_zoom):
+                value = self._image.max_zoom
         self._zoom = value
 
     @property

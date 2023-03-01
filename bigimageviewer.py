@@ -2,7 +2,21 @@
 Main window and executable application for viewing DZI images using Qt.
 
 Usage:
-    bigimageviewer  --zoom n [filename]
+    bigimageviewer  [options] [filename]
+      -z or --zoom n   : specify the zoom (0=smallest, 1=twice as big, etc)
+      -W or --width n  : set initial max with of main viewer (default 512)
+      -W or --height n : set initial max height of main viewer (default 512)
+      -F or --fit      : fit window to size of image
+
+Window interaction:
+    Scrolling is done with click-drag or wheel/two finger gestures.
+    Zooming in is with the + key or double-click.  Zooming is centered
+    at the point the mouse was at.
+    Zooming out is with the - key or shift-double-click, also centered
+    where the mouse was at.
+    The q key exits.
+    The image can be resized.  It won't change the zoom but will load more
+    picture, or discard some of the picture, as needed.
 
 Classes:
     MainWindow - Top-level Qt window containing the viewer
