@@ -196,23 +196,28 @@ class BigImageComponent(QLabel):
             if (fromx == tox and fromy == toy):
                 return
             self._mouse_drag_from_pos = e.position()
-            need_redraw = self._loaded_image.scroll(fromx, fromy, tox, toy)
-            if (need_redraw):
-                self._qimage, qrect = self._loaded_image.to_qimage()
-                self._image_label.setPixmap(
-                    QPixmap.fromImageInPlace(self._qimage)
-                )
-                self._image_label.setGeometry(
-                    -qrect.x(), -qrect.y(),
-                    qrect.width() + qrect.x(),
-                    qrect.height()+qrect.y()
-                )
-            else:
-                qrect = self._loaded_image.get_rect()
-                self._image_label.setGeometry(
-                    -qrect.x(), -qrect.y(),
-                    qrect.width() + qrect.x(),
-                    qrect.height() + qrect.y())
+            dx = tox - fromx
+            dy = toy - fromy
+            self._scroll(dx, dy)
+
+    def _scroll(self, dx, dy):
+        need_redraw = self._loaded_image.scroll(dx, dy)
+        if (need_redraw):
+            self._qimage, qrect = self._loaded_image.to_qimage()
+            self._image_label.setPixmap(
+                QPixmap.fromImageInPlace(self._qimage)
+            )
+            self._image_label.setGeometry(
+                -qrect.x(), -qrect.y(),
+                qrect.width() + qrect.x(),
+                qrect.height()+qrect.y()
+            )
+        else:
+            qrect = self._loaded_image.get_rect()
+            self._image_label.setGeometry(
+                -qrect.x(), -qrect.y(),
+                qrect.width() + qrect.x(),
+                qrect.height() + qrect.y())
 
     def mousePressEvent(self, e):
         """
@@ -228,7 +233,17 @@ class BigImageComponent(QLabel):
         """ Stops scrolling """
         self._mouse_drag_from_pos = None
 
+    def wheelEvent(self, e):
+        """
+        Same as a click and drag - scrolls the image
+        """
+        dx = e.pixelDelta().x()
+        dy = e.pixelDelta().y()
+        if (dx != 0 or dy != 0):
+            self._scroll(dx, dy)
+
     def keyPressEvent(self, event):
+        """ Handles zoom in, zoom out and exit key presses """
         key = event.key()
         pos = self.mapFromGlobal(QCursor.pos())
         x = pos.x()

@@ -91,34 +91,18 @@ class MainWindow(QMainWindow):
         if acceptMode == QFileDialog.AcceptSave:
             dialog.setDefaultSuffix("dzi")
 
-    def load_and_focus(self, filename=None, zoom=-1, fit=False):
-        """
-        Call this after the window has displayed to load an image
-        (eg using QTimer.singleshot()) and focus the component.
+    def fit_to_image(self):
+        """ Resizes the viewer to exactly fit the loaded image """
+        width = self._viewer.image_width
+        height = self._viewer.image_height
+        size = self.size()
+        childsize = self.centralWidget().size()
+        dx = width - childsize.width()
+        dy = height - childsize.height()
+        self.resize(size.width() + dx, size.height() + dy)
 
-        Keyword arguments:
-            filename -- if not None, load that image
-            zoom -- set the initial zoom to this value (-1=fit to window)
-            fit -- If true, window will be shaped to fit the image
-
-        If if either width or height is -1, the window will be resized in
-        both directions.
-
-        The image is loaded to fit the window size that was specified
-        in the constructor.  If fit is True, it will then be reduced to
-        exactly fit that image.
-        """
-        if (filename is not None):
-            self.load_file(filename, zoom)
-        if (fit):
-            width = self._viewer.image_width
-            height = self._viewer.image_height
-            size = self.size()
-            childsize = self.centralWidget().size()
-            dx = width - childsize.width()
-            dy = height - childsize.height()
-            self.resize(size.width() + dx, size.height() + dy)
-
+    def focusViewer(self):
+        """ Puts the window focus on the viewer """
         self._viewer.setFocus()
 
 
@@ -154,7 +138,12 @@ if __name__ == "__main__":
     app = QApplication()
     w = MainWindow(viewport_width=width, viewport_height=height)
 
+    if (filename is not None):
+        w.load_file(filename, zoom)
+        if (fit):
+            w.fit_to_image()
+
     w.show()
-    QTimer.singleShot(1, lambda: w.load_and_focus(filename, zoom, fit))
+    QTimer.singleShot(1, w.focusViewer)
 
     sys.exit(app.exec())

@@ -308,7 +308,7 @@ class LoadedImage:
 
         raise NotImplementedException
 
-    def scroll(self, fromx, fromy, tox, toy):
+    def scroll(self, dx, dy):
         """ Call this when dragging an image
 
             Positional arguments:
@@ -322,9 +322,9 @@ class LoadedImage:
                 False otherwise
         """
         new_viewport_x_on_full_image \
-            = self._viewport_x_on_fullimage - (tox-fromx)
+            = self._viewport_x_on_fullimage - dx
         new_viewport_y_on_full_image \
-            = self._viewport_y_on_fullimage - (toy-fromy)
+            = self._viewport_y_on_fullimage - dy
 
         return self.scroll_to(new_viewport_x_on_full_image,
                               new_viewport_y_on_full_image)
