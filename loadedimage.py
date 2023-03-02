@@ -14,7 +14,7 @@ import numpy as np
 from PySide6.QtCore import QRect
 from PySide6.QtGui import QImage, qRgb
 
-from dzimage import *
+from .dzimage import *
 
 _GRAY_COLOR_TABLE = [qRgb(i, i, i) for i in range(256)]
 
@@ -269,7 +269,7 @@ class LoadedImage:
             - self._image.tile_start(self._tile_xstart)
         self._viewport_y = self._viewport_y_on_fullimage \
             - self._image.tile_start(self._tile_ystart)
-
+        
     def to_qimage(self):
         """
         Return the loaded image as a QImage, along with the QRect that is

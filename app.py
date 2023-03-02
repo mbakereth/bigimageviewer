@@ -26,11 +26,11 @@ import logging
 import pathlib
 import argparse
 
-from PySide6.QtCore import QDir, QSize, QTimer
+from PySide6.QtCore import QDir, Qt, QTimer, QSize
 from PySide6.QtWidgets import QApplication, QMainWindow, QDialog, QFileDialog
 from PySide6.QtGui import QAction, QKeySequence
 
-from bigimagecomponent import BigImageComponent
+from .bigimagecomponent import BigImageComponent
 
 
 class MainWindow(QMainWindow):
@@ -62,6 +62,7 @@ class MainWindow(QMainWindow):
 
         self._viewer = BigImageComponent(width=viewport_width,
                                          height=viewport_height)
+        self._viewer.exit_key = Qt.Key.Key_Q
         self.setCentralWidget(self._viewer)
 
         # Main menu bar
@@ -70,7 +71,7 @@ class MainWindow(QMainWindow):
         open = QAction("&Open", self, triggered=self._open)
         open.setShortcuts(QKeySequence.Open)
         self.menu_file.addAction(open)
-        exit = QAction("E&xit", self, triggered=app.quit)
+        exit = QAction("E&xit", self, triggered=qApp.quit)
         self.menu_file.addAction(exit)
         self._first_file_dialog = True
 
@@ -94,6 +95,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(path.stem)
         return ret
 
+    def resize_viewer(self, width, height):
+        """ Resizes the image view to the given dimensions """
+        self._viewer.resize(width, height)
+
     def _initialize_image_filedialog(self, dialog, acceptMode):
         if self._first_file_dialog:
             self._first_file_dialog = False
@@ -113,51 +118,26 @@ class MainWindow(QMainWindow):
         childsize = self.centralWidget().size()
         dx = width - childsize.width()
         dy = height - childsize.height()
-        self.resize(size.width() + dx, size.height() + dy)
+        # self.resize(QSize(width, height))
+        self._centralWidgetResize(width, height)
+
+
+    def _centralWidgetResize(self, x, y):
+        # If the window is not visible, it doesn't keep its layout up to date,
+        # so force it.
+        if not self.isVisible():
+            self.layout().update()
+        # Does nothing if the layout is already up to date (and the window is
+        # visible).
+        self.layout().activate()
+        size = self.size()
+        childsize = self.centralWidget().size()
+        dx = size.width() - childsize.width()
+        dy = size.height() - childsize.height()
+        self.resize(x + dx, y + dy)
 
     def focusViewer(self):
         """ Puts the window focus on the viewer """
         self._viewer.setFocus()
 
 
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(
-        prog='bigimageviewer',
-        description='Displays a DZI image')
-
-    parser.add_argument('filename', nargs='?')
-    parser.add_argument(
-        '-z', '--zoom', default=-1, type=int,
-        help="Initial zoom (-1=fit to window, 0=zoomed out, 1=double " +
-             "size, etc)")
-    parser.add_argument(
-        '-W', '--width', default=MainWindow.DEFAULT_WIDTH, type=int,
-        help="Initial width of image viewport (not of window)")
-    parser.add_argument(
-        '-H', '--height', default=MainWindow.DEFAULT_HEIGHT, type=int,
-        help="Initial height of image viewport (not of window)")
-    parser.add_argument(
-        '-F', '--fit', action="store_true",
-        help="If set, window will be reduced to the image size")
-
-    args = parser.parse_args()
-    filename = args.filename
-    zoom = args.zoom
-    width = args.width
-    height = args.height
-    fit = args.fit
-
-    logging.getLogger().setLevel(logging.INFO)
-    app = QApplication()
-    w = MainWindow(viewport_width=width, viewport_height=height)
-
-    if (filename is not None):
-        w.load_file(filename, zoom)
-        if (fit):
-            w.fit_to_image()
-
-    w.show()
-    QTimer.singleShot(1, w.focusViewer)
-
-    sys.exit(app.exec())

@@ -12,8 +12,8 @@ from PySide6.QtCore import QSize, Qt, QRect, QEvent, QObject, Signal
 from PySide6.QtWidgets import QLabel, QFrame, QSizePolicy
 from PySide6.QtGui import QColorSpace, QPixmap, QCursor
 
-from dzimage import *
-from loadedimage import *
+from .dzimage import *
+from .loadedimage import *
 
 
 class ImageLabel(QLabel):
@@ -26,7 +26,7 @@ class ImageLabel(QLabel):
     """
     def __init__(self, parent=None, width=512, height=512):
         super().__init__(parent)
-        # self.setStyleSheet("background-color: blue")
+        self.setStyleSheet("background-color: blue")
         self._initial_width = width
         self._initial_height = height
 
@@ -44,7 +44,8 @@ class BigImageComponent(QLabel):
     with the - key or shift-double-click.  Zooming will be centered on the
     point in the image under the mouse where the key was pressed.
 
-    Pressing the q key exits the application.
+    A key can also be assigned to exut the application.  This is disabled
+    by default.
 
     You can change this behaviour with the zoom_in_key, zoom_out_key and
     exit_key properties.
@@ -58,7 +59,7 @@ class BigImageComponent(QLabel):
     """ Pressing this will zoom the image. """
     DEFAULT_ZOOM_IN_KEY = Qt.Key.Key_Plus
     DEFAULT_ZOOM_OUT_KEY = Qt.Key.Key_Minus
-    DEFAULT_EXIT_KEY = Qt.Key.Key_Q
+    DEFAULT_EXIT_KEY = None
 
     def __init__(self, parent=None, width=512, height=512):
         """
@@ -77,6 +78,7 @@ class BigImageComponent(QLabel):
         self._initial_width = width
         self._initial_height = height
         self._image_label = ImageLabel(self, width, height)
+        self._image_label.setGeometry(0, 0, width, height)
         self._image_label.setAlignment(Qt.AlignLeft)
         self._image = None
         self._loaded_image = None
@@ -91,6 +93,8 @@ class BigImageComponent(QLabel):
         self._zoom_out_key = BigImageComponent.DEFAULT_ZOOM_OUT_KEY
         self._exit_key = BigImageComponent.DEFAULT_EXIT_KEY
 
+        self.setStyleSheet("background-color: yellow")
+
     @property
     def zoom_in_key(self):
         """ Returns the key that zooms in, or None if none set (default + )"""
@@ -104,7 +108,7 @@ class BigImageComponent(QLabel):
         Positional parameters:
             value -- a QKey.  If set to None, zoom in is disabled
         """
-        self.zoom_in_key = value
+        self._zoom_in_key = value
 
     @property
     def zoom_out_key(self):
@@ -119,7 +123,7 @@ class BigImageComponent(QLabel):
         Positional parameters:
             value -- a QKey.  If set to None, zoom out is disabled
         """
-        self.zoom_out_key = value
+        self._zoom_out_key = value
 
     @property
     def exit_key(self):
@@ -134,7 +138,7 @@ class BigImageComponent(QLabel):
         Positional parameters:
             value -- a QKey.  If set to None, exit by key press is disabled
         """
-        self.exit_key = value
+        self._exit_key = value
 
     def sizeHint(self):
         """
@@ -168,7 +172,6 @@ class BigImageComponent(QLabel):
         self._loaded_image.viewport_size \
             = (viewport_geom.width(), viewport_geom.height())
         self._loaded_image.load_image()
-
         return self._redraw_image()
 
     def _redraw_image(self):
@@ -284,15 +287,6 @@ class BigImageComponent(QLabel):
 
         if (changed):
             self._redraw_image()
-
-    def _redraw_image(self):
-        self._qimage, qrect = self._loaded_image.to_qimage()
-        self._image_label.setPixmap(QPixmap.fromImageInPlace(self._qimage))
-        self._image_label.setGeometry(
-            -qrect.x(), -qrect.y(),
-            qrect.width() + qrect.x(),
-            qrect.height()+qrect.y()
-        )
 
     def resizeEvent(self, event):
         """ Ensures the right amount of image is loaded as the window is
