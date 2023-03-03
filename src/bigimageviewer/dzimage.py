@@ -1,14 +1,8 @@
 """
-Package for manipulating DeepZoom images.
+Class for manipulating DeepZoom images.
 
 Classes:
     DZImage -- Rpresents a DeepZoom image
-
-Exceptions:
-    FileFormatError -- raised if there is an error in the XML file or a
-                    size mismatch
-    ZoomError -- raised if an invalid zoom is requested (one that isn't
-                 in the image)
 """
 
 import math
@@ -20,25 +14,10 @@ import logging
 from bs4 import BeautifulSoup
 import cv2
 from PySide6.QtGui import QImage, QPixmap
+from .bigimage import BigImage, FileFormatError, ZoomError
 
 
-class FileFormatError(Exception):
-    """Raised when there is an error in the DZI file format"""
-
-    def __init__(self, message="Error in file format"):
-        self.message = message
-        super().__init__(self.message)
-
-
-class ZoomError(Exception):
-    """Raised when there an invalid zoom is requested"""
-
-    def __init__(self, message="Error in file format"):
-        self.message = message
-        super().__init__(self.message)
-
-
-class DZImage:
+class DZImage(BigImage):
     """
     A DigitalZoom image.
 
@@ -80,7 +59,8 @@ class DZImage:
         if ("Height" in soup.Image.attrs):
             self._height = soup.Image['Height']
         if ("TileSize" in soup.Image.attrs):
-            self._tile_size = soup.Image['TileSize']
+            self._tile_width = soup.Image['TileSize']
+            self._tile_height = self._tile_width
         else:
             raise FileFormatError("Image tag contains no tile size")
         if ("Overlap" in soup.Image.attrs):
@@ -116,9 +96,10 @@ class DZImage:
         except ValueError:
             raise FileFormatError("overlap is not an integer")
         try:
-            self._tile_size = int(self._tile_size)
+            self._tile_width = int(self._tile_width)
+            self._tile_height = self._tile_width
         except ValueError:
-            raise FileFormatError("tile_size is not an integer")
+            raise FileFormatError("tile size is not an integer")
 
         # calculate zooms
         self._zoom_to_width = {}
@@ -150,57 +131,49 @@ class DZImage:
 
     @property
     def max_zoom(self):
+        """ 
+        Returns the maximum zoom available for this image (biggest number)
+        """
         return self._max_zoom
 
     @property
     def min_zoom(self):
+        """ 
+        Returns the minimum zoom available for this image (smallest number)
+        """
         return self._min_zoom
 
-    def num_tiles_across(self, zoom):
-        """ Returns the number of tiles in the x direction"""
-        tiles = int(math.ceil(self.width_for_zoom(zoom)/self._tile_size))
-        if (tiles < 1):
-            return 1
-        return tiles
-
-    def num_tiles_down(self, zoom):
-        """ Returns the number of tiles in the y direction """
-        tiles = int(math.ceil(self.height_for_zoom(zoom)/self._tile_size))
-        if (tiles < 1):
-            return 1
-        return tiles
-
-    def x_to_tile(self, x):
-        """
-        Given the x cordinate in the full image, returns the tile number
-        """
-        tile = int(x/self._tile_size+0.0001)
-        return tile
-
-    def y_to_tile(self, y):
-        """
-        Given the y cordinate in the full image, returns the tile number
-        """
-        tile = int(y/self._tile_size+0.0001)
-        return tile
-
-    def tile_filename(self, tilex, tiley):
+    def _tile_filename(self, tilex, tiley):
         """
         Given the x and y coordinates in the full image. returns
         the filename for the tile without the path.
         """
         return f"{tilex}_{tiley}.{self._format}"
 
-    def tile_fullpath(self, x, y, zoom):
+    def _tile_fullpath(self, x, y, zoom):
         return os.path.join(self._files_full_path, str(zoom),
-                            self.tile_filename(x, y))
+                            self._tile_filename(x, y))
 
-    def tile_start(self, tile, clip=False):
+    def tile_start_x(self, tile, clip=False):
         """
-        Returns the x or y coordinate of the top-left corner of the
+        Returns the x coordinate of the top-left corner of the
         given tile, including the overlap pixels
         """
-        coord = tile*self._tile_size
+        coord = tile*self._tile_width
+        if (clip and coord - self._overlap < 0):
+            return 0
+        if (tile == 0):
+            overlap = 0
+        else:
+            overlap = self._overlap
+        return coord - overlap
+
+    def tile_start_y(self, tile, clip=False):
+        """
+        Returns the y coordinate of the top-left corner of the
+        given tile, including the overlap pixels
+        """
+        coord = tile*self._tile_height
         if (clip and coord - self._overlap < 0):
             return 0
         if (tile == 0):
@@ -214,8 +187,8 @@ class DZImage:
         Returns 1 pixel beyond the x coordinate of the right corner of the
         given tile, including the overlap pixels
         """
-        tile_start = self.tile_start(tile)
-        tile_end_plus_one = tile_start + self._tile_size \
+        tile_start = self.tile_start_x(tile)
+        tile_end_plus_one = tile_start + self._tile_width \
             + self.left_overlap(tile) + self.right_overlap(tile, zoom)
         if (tile_end_plus_one > self._zoom_to_width[zoom]):
             tile_end_plus_one = self._zoom_to_width[zoom]
@@ -226,8 +199,8 @@ class DZImage:
         Returns 1 pixel beyond the y coordinate of the bottom corner of the
         given tile, including the overlap pixels
         """
-        tile_start = self.tile_start(tile)
-        tile_end_plus_one = tile_start + self._tile_size \
+        tile_start = self.tile_start_y(tile)
+        tile_end_plus_one = tile_start + self._tile_height \
             + self.top_overlap(tile) + self.bottom_overlap(tile, zoom)
         if (tile_end_plus_one > self._zoom_to_height[zoom]):
             tile_end_plus_one = self._zoom_to_height[zoom]
@@ -260,25 +233,16 @@ class DZImage:
         return self._overlap
 
     @property
-    def tile_size(self):
-        """ return the normal tile size (same for all tiles) """
-        return self._tile_size
+    def tile_width(self):
+        """ return the normal tile width (same for all tiles) """
+        return self._tile_width
 
-    def tile_width(self, tile, zoom):
-        """
-        Returns the width of the given tile number at the given zoom,
-        including overlap. trimmed if neccessary to the image size
-        """
-        return self.tile_end_x_plus_one(tile, zoom) - self.tile_start(tile)
+    @property
+    def tile_height(self):
+        """ return the normal tile height (same for all tiles) """
+        return self._tile_height
 
-    def tile_height(self, tile, zoom):
-        """
-        Returns the height of the given tile number at the given zoom,
-        including overlap. trimmed if neccessary to the image size
-        """
-        return self.tile_end_y_plus_one(tile, zoom) - self.tile_start(tile)
-
-    def width_for_zoom(self, zoom):
+    def image_width_for_zoom(self, zoom):
         """
         Returns the width of the image at the given zoom.
 
@@ -288,7 +252,7 @@ class DZImage:
             return self._zoom_to_width[zoom]
         raise ZoomError(f"Invalid zoom {zoom} requested")
 
-    def height_for_zoom(self, zoom):
+    def image_height_for_zoom(self, zoom):
         """
         Returns the height of the image at the given zoom.
 
@@ -298,27 +262,10 @@ class DZImage:
             return self._zoom_to_height[zoom]
         raise ZoomError(f"Invalid zoom {zoom} requested")
 
-    def fit_to_viewport(self, viewport_width, viewport_height):
-        """
-        Returns (zoom, width, height) of the biggest zoom that will
-        completely fit within the given viewport size.
-
-        If none fit, the smallest zoom is returned.  Width and height
-        may be bigger than the viewport
-
-        Positional arguments:
-        viewport_width  : width of the viewport image must fit in
-        viewport_height : height of the viewport image must fit in
-        """
-
-        for z in self._zooms:
-            if (z in self._zoom_to_width):
-                width = self._zoom_to_width[z]
-                height = self._zoom_to_height[z]
-                if (width <= viewport_width and height < viewport_height):
-                    return (z, width, height)
-        # fallback - return smallest zoom.  may be bigger than viewport
-        return (z, width, height)
+    @property
+    def zooms(self):
+        """ Return an array of available zooms, biggest to smallest """
+        return self._zooms
 
     def load_tile(self, tilex, tiley, zoom):
         """
@@ -332,10 +279,10 @@ class DZImage:
         Raises FileFormatError if format is not recognised
         """
 
-        expected_width = self.tile_width(tilex, zoom)
-        expected_height = self.tile_height(tiley, zoom)
+        expected_width = self.tile_width_at_zoom(tilex, zoom)
+        expected_height = self.tile_height_at_zoom(tiley, zoom)
 
-        filename = self.tile_fullpath(tilex, tiley, zoom)
+        filename = self._tile_fullpath(tilex, tiley, zoom)
         img = cv2.imread(filename)
         height, width, channel = img.shape
         if (width != expected_width or height != expected_height):
@@ -346,3 +293,8 @@ class DZImage:
                                   )
 
         return img
+
+    @property
+    def band_format(self):
+        """ Returns BigImage.BGR or BigImage.RGB """
+        return BigImage.RGB

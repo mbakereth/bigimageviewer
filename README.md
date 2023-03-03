@@ -11,6 +11,31 @@ mouse is) and zooming out with the - button (again, centerd on the mouse
 location.)  Pressing q exits the application.  These keys can be customized
 or switched off.
 
+Installation
+------------
+
+As for all python packages. we recommend you create a virtual environment, eg:
+
+```bash
+virtualenv venv
+venv/bin/activate
+```
+If you make make, you can build and install with
+
+```bash
+make
+make install
+```
+
+If you don't have make, install with
+
+```bash
+python3 -m pip install --upgrade build
+python3 -m build
+pip install dist/bigimageviewer-VERSION-py3-none-any.whl
+```
+where substituting `VERSION` for the version you built.
+
 Example Usage
 -------------
 

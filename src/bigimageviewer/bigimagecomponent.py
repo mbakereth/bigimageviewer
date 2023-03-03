@@ -9,12 +9,12 @@ Classes:
 import sys
 
 from PySide6.QtCore import QSize, Qt, QRect, QEvent, QObject, Signal
-from PySide6.QtWidgets import QLabel, QFrame, QSizePolicy
+from PySide6.QtWidgets import QLabel, QFrame, QSizePolicy, QErrorMessage
 from PySide6.QtGui import QColorSpace, QPixmap, QCursor
 
 from .dzimage import *
 from .loadedimage import *
-
+from .liimage import *
 
 class ImageLabel(QLabel):
     """
@@ -164,7 +164,15 @@ class BigImageComponent(QLabel):
                     A zoom of -1 means choose the maximum zoom that completel
                     fits within the widget
         """
-        self._image = DZImage(filename)
+        try:
+            if (filename.lower().endswith(".dzi")):
+                self._image = DZImage(filename)
+            else:
+                self._image = LIImage(filename)
+        except FileFormatError as e:
+            error_dialog = QErrorMessage()
+            error_dialog.showMessage("Can't load file: " + e.message)
+
         self._loaded_image = LoadedImage(self._image)
         self._loaded_image.viewport_on_fullimage = (0, 0)
         self._loaded_image.zoom = zoom
@@ -193,6 +201,8 @@ class BigImageComponent(QLabel):
         A click and drag scrolls the image (there are no scrollbars)
         """
         if (e.buttons() == Qt.LeftButton):
+            if (self._mouse_drag_from_pos is None):
+                return
             fromx = int(self._mouse_drag_from_pos.x())
             fromy = int(self._mouse_drag_from_pos.y())
             tox = int(e.position().x())
@@ -306,10 +316,10 @@ class BigImageComponent(QLabel):
     def image_width(self):
         if (self._loaded_image is None):
             return None
-        return self._image.width_for_zoom(self._loaded_image.zoom)
+        return self._image.image_width_for_zoom(self._loaded_image.zoom)
 
     @property
     def image_height(self):
         if (self._loaded_image is None):
             return None
-        return self._image.height_for_zoom(self._loaded_image.zoom)
+        return self._image.image_height_for_zoom(self._loaded_image.zoom)

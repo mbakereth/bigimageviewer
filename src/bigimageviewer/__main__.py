@@ -8,7 +8,7 @@ from .app import MainWindow
 
 parser = argparse.ArgumentParser(
     prog='bigimageviewer',
-    description='Displays a DZI image')
+    description='Displays a tiled image')
 
 parser.add_argument('filename', nargs='?')
 parser.add_argument(

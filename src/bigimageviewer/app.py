@@ -71,7 +71,8 @@ class MainWindow(QMainWindow):
         open = QAction("&Open", self, triggered=self._open)
         open.setShortcuts(QKeySequence.Open)
         self.menu_file.addAction(open)
-        exit = QAction("E&xit", self, triggered=qApp.quit)
+        app = QApplication.instance()
+        exit = QAction("E&xit", self, triggered=app.quit)
         self.menu_file.addAction(exit)
         self._first_file_dialog = True
 

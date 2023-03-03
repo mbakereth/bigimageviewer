@@ -185,8 +185,8 @@ class LoadedImage:
         # If zoom is not set to fit to window, get the size of the
         # image at the requested zoom
         if (self._zoom != -1):
-            self._zoomed_image_width = self._image.width_for_zoom(self._zoom)
-            self._zoomed_image_height = self._image.height_for_zoom(self._zoom)
+            self._zoomed_image_width = self._image.image_width_for_zoom(self._zoom)
+            self._zoomed_image_height = self._image.image_height_for_zoom(self._zoom)
 
         # If we have requested the image to be centered at a given pixel,
         # determine the top left corner of the image on the viewport from it,
@@ -224,9 +224,9 @@ class LoadedImage:
         # get how many tiles are in the canvas (this may be more than the
         # actual image)
         tiles_across_in_canvas \
-            = int(math.ceil(self._viewport_width/self._image.tile_size))
+            = int(math.ceil(self._viewport_width/self._image.tile_width))
         tiles_down_in_canvas \
-            = int(math.ceil(self._viewport_height/self._image.tile_size))
+            = int(math.ceil(self._viewport_height/self._image.tile_height))
 
         # add extra tiles each side, whether or not this goes beyond the image
         tiles_across_in_canvas += self._extra_tiles*2
@@ -255,20 +255,20 @@ class LoadedImage:
         self._tile_yend = self._tile_ystart + tiles_down_in_canvas
 
         # get size of canvas
-        self._canvas_width = tiles_across_in_canvas*self._image.tile_size
-        self._canvas_height = tiles_down_in_canvas*self._image.tile_size
+        self._canvas_width = tiles_across_in_canvas*self._image.tile_width
+        self._canvas_height = tiles_down_in_canvas*self._image.tile_height
 
-        self._canvas_x = self._image.tile_start(self._tile_xstart)
-        self._canvas_y = self._image.tile_start(self._tile_ystart)
+        self._canvas_x = self._image.tile_start_x(self._tile_xstart)
+        self._canvas_y = self._image.tile_start_y(self._tile_ystart)
 
         # load tiles
         self._load_tiles(init_matrix=True)
 
         # get start of viewport on canvas from start of viewport on full image
         self._viewport_x = self._viewport_x_on_fullimage \
-            - self._image.tile_start(self._tile_xstart)
+            - self._image.tile_start_x(self._tile_xstart)
         self._viewport_y = self._viewport_y_on_fullimage \
-            - self._image.tile_start(self._tile_ystart)
+            - self._image.tile_start_y(self._tile_ystart)
         
     def to_qimage(self):
         """
@@ -299,16 +299,22 @@ class LoadedImage:
 
             elif len(self._pixels.shape) == 3:
                 if self._pixels.shape[2] == 3:
+                    qformat = QImage.Format_BGR888
+                    if (self._image.band_format == BigImage.BGR):
+                        qformat = QImage.Format_RGB888
                     qim = QImage(self._pixels.data, self._pixels.shape[1],
                                  self._pixels.shape[0],
-                                 self._pixels.strides[0], QImage.Format_BGR888)
+                                 self._pixels.strides[0], qformat)
                     return (qim, qrect)
 
                 elif self._pixels.shape[2] == 4:
+                    qformat = QImage.Format_BGR32
+                    if (self._image.band_format == BigImage.BGR):
+                        qformat = QImage.Format_ARGB32
                     qim = QImage(self._pixels.data, self._pixels.shape[1],
                                  self._pixels.shape[0],
                                  self._pixels.strides[0],
-                                 QImage.Format_ABGR32)
+                                 qformat)
                     return (qim, qrect)
 
         raise NotImplementedException
@@ -437,25 +443,25 @@ class LoadedImage:
 
             # move pixels in numpy array
             copy_width = self._canvas_width - \
-                self._image.tile_size*(extra_tiles_left + extra_tiles_right)
+                self._image.tile_width*(extra_tiles_left + extra_tiles_right)
             copy_height = self._canvas_height - \
-                self._image.tile_size*(extra_tiles_top + extra_tiles_bottom)
+                self._image.tile_height*(extra_tiles_top + extra_tiles_bottom)
             old_pixel_xstart = 0
             old_pixel_ystart = 0
             new_pixel_xstart = 0
             new_pixel_ystart = 0
             if (extra_tiles_bottom > 0):  # move up
-                old_pixel_ystart = self._image.tile_size*extra_tiles_bottom
-                self._viewport_y -= self._image.tile_size*extra_tiles_bottom
+                old_pixel_ystart = self._image.tile_height*extra_tiles_bottom
+                self._viewport_y -= self._image.tile_height*extra_tiles_bottom
             if (extra_tiles_top > 0):  # move down
-                new_pixel_ystart = self._image.tile_size*extra_tiles_top
-                self._viewport_y += self._image.tile_size*extra_tiles_top
+                new_pixel_ystart = self._image.tile_height*extra_tiles_top
+                self._viewport_y += self._image.tile_height*extra_tiles_top
             if (extra_tiles_right > 0):  # move left
-                old_pixel_xstart = self._image.tile_size*extra_tiles_right
-                self._viewport_x -= self._image.tile_size*extra_tiles_right
+                old_pixel_xstart = self._image.tile_width*extra_tiles_right
+                self._viewport_x -= self._image.tile_width*extra_tiles_right
             if (extra_tiles_left > 0):  # move down
-                new_pixel_xstart = self._image.tile_size*extra_tiles_left
-                self._viewport_x += self._image.tile_size*extra_tiles_left
+                new_pixel_xstart = self._image.tile_width*extra_tiles_left
+                self._viewport_x += self._image.tile_width*extra_tiles_left
             self._pixels[new_pixel_ystart:new_pixel_ystart+copy_height,
                          new_pixel_xstart:new_pixel_xstart+copy_width] \
                 = self._pixels[old_pixel_ystart:old_pixel_ystart+copy_height,
@@ -529,7 +535,7 @@ class LoadedImage:
                 continue
             top_overlap = self._image.top_overlap(tiley)
             bottom_overlap = self._image.bottom_overlap(tiley, self._zoom)
-            ypos = self._image.tile_size*(tiley-self._tile_ystart)
+            ypos = self._image.tile_height*(tiley-self._tile_ystart)
             for tilex in range(self._tile_xstart, self._tile_xend):
                 if (tilex < 0 or tilex >= tiles_across):
                     continue
@@ -541,7 +547,7 @@ class LoadedImage:
 
                 left_overlap = self._image.left_overlap(tilex)
                 right_overlap = self._image.right_overlap(tilex, self._zoom)
-                xpos = self._image.tile_size*(tilex-self._tile_xstart)
+                xpos = self._image.tile_width*(tilex-self._tile_xstart)
                 img = self._image.load_tile(tilex, tiley, self._zoom)
                 height, width, channel = img.shape
                 if (init_matrix and first):
