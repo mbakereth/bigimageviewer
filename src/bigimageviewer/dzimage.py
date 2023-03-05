@@ -131,14 +131,14 @@ class DZImage(BigImage):
 
     @property
     def max_zoom(self):
-        """ 
+        """
         Returns the maximum zoom available for this image (biggest number)
         """
         return self._max_zoom
 
     @property
     def min_zoom(self):
-        """ 
+        """
         Returns the minimum zoom available for this image (smallest number)
         """
         return self._min_zoom

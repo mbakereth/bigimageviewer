@@ -61,17 +61,17 @@ class BigImage:
         """ Reads the metadata for an image"""
 
         raise NotImplementedError
-    
+
     @property
     def max_zoom(self):
-        """ 
+        """
         Returns the maximum zoom available for this image (biggest number)
         """
         raise NotImplementedError
 
     @property
     def min_zoom(self):
-        """ 
+        """
         Returns the minimum zoom available for this image (smallest number)
         """
         raise NotImplementedError
@@ -85,7 +85,8 @@ class BigImage:
 
     def num_tiles_down(self, zoom):
         """ Returns the number of tiles in the y direction """
-        tiles = int(math.ceil(self.image_height_for_zoom(zoom)/self.tile_height))
+        tiles = int(math.ceil(self.image_height_for_zoom(zoom) /
+                              self.tile_height))
         if (tiles < 1):
             return 1
         return tiles
@@ -194,7 +195,7 @@ class BigImage:
         Raises ZoomError if the zoom doesn't exist
         """
         raise NotImplementedError
-    
+
     @property
     def zooms(self):
         """ Return an array of available zooms, biggest to smallest """

@@ -89,14 +89,14 @@ class LIImage(BigImage):
 
     @property
     def max_zoom(self):
-        """ 
+        """
         Returns the maximum zoom available for this image (biggest number)
         """
         return self._max_zoom
 
     @property
     def min_zoom(self):
-        """ 
+        """
         Returns the minimum zoom available for this image (smallest number)
         """
         return self._min_zoom
@@ -109,7 +109,7 @@ class LIImage(BigImage):
         coord = tile*self._tile_width
         if (clip and coord < 0):
             return 0
-        return coord 
+        return coord
 
     def tile_start_y(self, tile, clip=False):
         """
@@ -119,7 +119,7 @@ class LIImage(BigImage):
         coord = tile*self._tile_height
         if (clip and coord < 0):
             return 0
-        return coord 
+        return coord
 
     def tile_end_x_plus_one(self, tile, zoom):
         """
@@ -127,7 +127,7 @@ class LIImage(BigImage):
         given tile, including the overlap pixels
         """
         tile_start = self.tile_start_x(tile)
-        tile_end_plus_one = tile_start + self.tile_width 
+        tile_end_plus_one = tile_start + self.tile_width
         if (tile_end_plus_one > self._zoom_to_width[zoom]):
             tile_end_plus_one = self._zoom_to_width[zoom]
         return tile_end_plus_one
@@ -210,14 +210,15 @@ class LIImage(BigImage):
         expected_height = self.tile_height_at_zoom(tiley, zoom)
 
         img = self._source.getTile(tilex, tiley, zoom,
-                        numpyAllowed=True)
+                                   numpyAllowed=True)
 
         height, width, channel = img.shape
         if (width == self.tile_width and expected_width < self.tile_width or
-            height == self.tile_height and expected_height < self.tile_height):
-                return img[0:expected_height, 0:expected_width]
+                height == self.tile_height and
+                expected_height < self.tile_height):
+            return img[0:expected_height, 0:expected_width]
         return img
-    
+
     @property
     def band_format(self):
         """ Returns BigImage.BGR or BigImage.RGB """

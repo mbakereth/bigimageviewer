@@ -185,8 +185,10 @@ class LoadedImage:
         # If zoom is not set to fit to window, get the size of the
         # image at the requested zoom
         if (self._zoom != -1):
-            self._zoomed_image_width = self._image.image_width_for_zoom(self._zoom)
-            self._zoomed_image_height = self._image.image_height_for_zoom(self._zoom)
+            self._zoomed_image_width = \
+                self._image.image_width_for_zoom(self._zoom)
+            self._zoomed_image_height = \
+                self._image.image_height_for_zoom(self._zoom)
 
         # If we have requested the image to be centered at a given pixel,
         # determine the top left corner of the image on the viewport from it,
@@ -214,10 +216,9 @@ class LoadedImage:
         # if zoom set to fit to window, set the canvas size to the get width
         # and height of zoomed image.
         if (self._zoom == -1):  # fit to viewport
-            (self._zoom, self._zoomed_image_width, self._zoomed_image_height) \
-                = self._image.fit_to_viewport(
-                    self._viewport_width, self._viewport_height
-                )
+            (self._zoom, self._zoomed_image_width,
+             self._zoomed_image_height) = self._image.fit_to_viewport(
+                self._viewport_width, self._viewport_height)
             self._canvas_width = self._zoomed_image_width
             self._canvas_height = self._zoomed_image_height
 
@@ -269,7 +270,7 @@ class LoadedImage:
             - self._image.tile_start_x(self._tile_xstart)
         self._viewport_y = self._viewport_y_on_fullimage \
             - self._image.tile_start_y(self._tile_ystart)
-        
+
     def to_qimage(self):
         """
         Return the loaded image as a QImage, along with the QRect that is

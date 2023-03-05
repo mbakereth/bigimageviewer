@@ -14,7 +14,7 @@ parser.add_argument('filename', nargs='?')
 parser.add_argument(
     '-z', '--zoom', default=-1, type=int,
     help="Initial zoom (-1=fit to window, 0=zoomed out, 1=double " +
-            "size, etc)")
+         "size, etc)")
 parser.add_argument(
     '-W', '--width', default=MainWindow.DEFAULT_WIDTH, type=int,
     help="Initial width of image viewport (not of window)")

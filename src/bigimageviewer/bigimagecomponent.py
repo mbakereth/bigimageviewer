@@ -16,6 +16,7 @@ from .dzimage import *
 from .loadedimage import *
 from .liimage import *
 
+
 class ImageLabel(QLabel):
     """
     This class holds the image pixap.

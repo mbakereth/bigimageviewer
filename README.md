@@ -2,7 +2,9 @@ Big Image Viewer
 ================
 
 This is a Python package to display potentially very large image.  Currently
-the only supported format is DeepZoom (.dzi).
+only supports tiled images, and only allows zooming to the levels given
+in the image (eg, if the image is not a pyramid, zooming in and out is
+not supported).
 
 It can be used as a standalone application or as a Qt widget in your own
 Qt application.  The component supports panning by click and drag.  It also
@@ -10,6 +12,10 @@ supports zooming with the + button (zoom is centered on the point where the
 mouse is) and zooming out with the - button (again, centerd on the mouse
 location.)  Pressing q exits the application.  These keys can be customized
 or switched off.
+
+DeepZoom images are supported natively.  Other tiled image formats are 
+supported through the large_image package.  The package dependencies include
+large_image with the `tiff` source.
 
 Installation
 ------------
@@ -30,6 +36,7 @@ make install
 If you don't have make, install with
 
 ```bash
+pip install -r requirements.txt
 python3 -m pip install --upgrade build
 python3 -m build
 pip install dist/bigimageviewer-VERSION-py3-none-any.whl

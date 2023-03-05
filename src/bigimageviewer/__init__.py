@@ -6,4 +6,3 @@ from .app import MainWindow
 __all__ = ["BigImageComponent", "ImageLabel", "DZImage", "FileFormatError",
            "ZoomError", "LoadedImage", "NotImplementedException",
            "MainWindow"]
-           

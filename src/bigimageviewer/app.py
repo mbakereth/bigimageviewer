@@ -122,7 +122,6 @@ class MainWindow(QMainWindow):
         # self.resize(QSize(width, height))
         self._centralWidgetResize(width, height)
 
-
     def _centralWidgetResize(self, x, y):
         # If the window is not visible, it doesn't keep its layout up to date,
         # so force it.
@@ -140,5 +139,3 @@ class MainWindow(QMainWindow):
     def focusViewer(self):
         """ Puts the window focus on the viewer """
         self._viewer.setFocus()
-
-
