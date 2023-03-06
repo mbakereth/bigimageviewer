@@ -36,7 +36,6 @@ class TestDZImage(unittest.TestCase):
             self.fail(f"Instantiate image raised ZoomError: "
                       + f"{e.message}")
 
-
     def _assert_tiles_match(self):
         for i in range(0, _VP_TILES_DOWN):
             for j in range(0, _VP_TILES_ACROSS):
@@ -44,16 +43,15 @@ class TestDZImage(unittest.TestCase):
                 xend = xstart + self.image.tile_width
                 ystart = self.image.tile_height * i
                 yend = ystart + self.image.tile_height
-                #print(j, i, np.sum(self.loaded_image._pixels[ystart:yend, xstart:xend]))
                 self.assertTrue(np.all(
-                    self.loaded_image._pixels[ystart:yend, xstart:xend] == \
-                    self.tiles[j, i]), 
+                    self.loaded_image._pixels[ystart:yend, xstart:xend] ==
+                    self.tiles[j, i]),
                     f"Tile x={j} y={i} not all {self.tiles[j, i]}")
 
     def test_01_load(self):
         self._create_image()
         self._zero_tiles()
-        self.tiles[2:4,2:4] = 1
+        self.tiles[2:4, 2:4] = 1
         self._assert_tiles_match()
 
     def test_02_scroll(self):
@@ -70,7 +68,7 @@ class TestDZImage(unittest.TestCase):
         self._zero_tiles()
         self.tiles[3:5, 2:4] = 1
         self._assert_tiles_match()
-        
+
         # scroll up 1 tile
         self._create_image()
         self.loaded_image.scroll(0, -self.image.tile_height, )
