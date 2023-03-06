@@ -21,12 +21,9 @@ Window interaction:
 Classes:
     MainWindow - Top-level Qt window containing the viewer
 """
-import sys
-import logging
 import pathlib
-import argparse
 
-from PySide6.QtCore import QDir, Qt, QTimer, QSize
+from PySide6.QtCore import QDir, Qt
 from PySide6.QtWidgets import QApplication, QMainWindow, QDialog, QFileDialog
 from PySide6.QtGui import QAction, QKeySequence
 

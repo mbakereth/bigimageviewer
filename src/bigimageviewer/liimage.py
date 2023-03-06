@@ -5,15 +5,9 @@ Classes:
     LIImage -- Rpresents a DeepZoom image
 """
 
-import math
 import os
 import os.path
 import pathlib
-import re
-import logging
-from bs4 import BeautifulSoup
-import cv2
-from PySide6.QtGui import QImage, QPixmap
 import large_image
 from .bigimage import BigImage, FileFormatError, ZoomError
 

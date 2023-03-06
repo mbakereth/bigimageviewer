@@ -8,8 +8,8 @@ Classes:
 """
 import sys
 
-from PySide6.QtCore import QSize, Qt, QRect, QEvent, QObject, Signal
-from PySide6.QtWidgets import QLabel, QFrame, QSizePolicy, QErrorMessage
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtWidgets import QLabel, QFrame, QErrorMessage
 from PySide6.QtGui import QColorSpace, QPixmap, QCursor
 
 from .dzimage import *
