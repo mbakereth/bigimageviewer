@@ -1,17 +1,26 @@
 Big Image Viewer
 ================
 
-This is a Python package to display potentially very large image.  Currently
-only supports tiled images, and only allows zooming to the levels given
-in the image (eg, if the image is not a pyramid, zooming in and out is
-not supported).
+Big Image Viewer is a package to displayed tiled image pyramids.  It's 
+purpose is efficiently to pan and zoom very large images in real time.
+It is designed for low memory footprint and fast response.
 
-It can be used as a standalone application or as a Qt widget in your own
-Qt application.  The component supports panning by click and drag.  It also
-supports zooming with the + button (zoom is centered on the point where the
-mouse is) and zooming out with the - button (again, centerd on the mouse
-location.)  Pressing q exits the application.  These keys can be customized
-or switched off.
+It only supports tiled pyramid images.  It reads DeepZoom (.dvi) files
+natively and other formats using the large_image package (with TIFF being
+the only format that has been tested, and only the TIFF library being
+loaded automatically in the dependencies).  If the image is not tiled, it will
+exit.
+
+Images are only displayed at the resolution of one of the images already in the
+pyramid.  Therefore it is recommended that users create an image pyramid to
+meet their requirements before viewing it with this package.
+
+Big Image Viewer can be used as a standalone application or as a Qt widget in 
+your own Qt application.  The component supports panning by click and drag.
+It also supports zooming with the + button (zoom is centered on the point
+where the mouse is) and zooming out with the - button (again, centerd on the
+mouse location.)  Pressing q exits the application.  These keys can be 
+customized or switched off.
 
 DeepZoom images are supported natively.  Other tiled image formats are 
 supported through the large_image package.  The package dependencies include
@@ -52,14 +61,16 @@ from bigimageviewer import BigImageComponent
 layout = QVBoxLayout()
 viewer = BigImageComponent(width=512, height=512)
 layout.addWidget(viewer)
-viewer.load_image("myimage.dzi")
+viewer.load_image("myimage.dzi")  # or a .tif file
 ```
 
 This will load the image at the biggest available zoom that fits in the 512x512
-window.  In DZI images, the minimum available zoom is 0.  How big that is
+window.  
+
+In DZI images, the minimum available zoom is 0.  How big that is
 varies according to the parameters used when it was created - it may be 1x1
 pixel, it may be bigger.  The maximum zoom depends on original dimensions
-amd the minimum zoom that was selected.  To determine the range of possible
+and the minimum zoom that was selected.  To determine the range of possible
 zooms, you can do the following:
 
 ```python
@@ -69,6 +80,14 @@ min_zoom = image.min_zoom
 max_zoom = image.max_zoom
 min_width = image.width_for_zoom(min_zoom)
 min_height = image.height_for_zoom(min_zoom)
+```
+
+The same applies for TIFF images (or potentially other tiled formats
+supported by the large_image package).  Replace the first two lines above with
+
+```python
+from bigimageviewer import LIImage
+image = LIImage("myimage.tif")
 ```
 
 To load an image with a different zoom, do the following:
@@ -96,8 +115,8 @@ switched off.  In the standalone application, the `q` quits the viewer but
 this is not enabled by default when you just use the component in your
 application.
 
-Creating DZImages
------------------
+Creating Images
+---------------
 
 The package `libvips` can be used to create DZI files from TIFF, JPEG, PNG
 etc.  For example
@@ -116,6 +135,13 @@ Alternatively, the Python wrapper for vips, pyvips, can be used:
 import pyvips
 image = pyvips.Image.new_from_file("myimages.tif")
 image.dzsave("test_dzi")
+```
+
+Alternatively, TIFF images can be saved.  In Python, replace the last line
+above with
+
+```python
+image.write_to_file("test.tif", pyramid=True, tile=True, compression="jpeg")
 ```
 
 Command Line Viewer

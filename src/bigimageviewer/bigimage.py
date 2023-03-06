@@ -46,8 +46,6 @@ class BigImage:
 
     def __init__(self, filename=None):
         super().__init__()
-        if (filename is not None):
-            self.open(filename)
 
     def open(self, filename):
         """ Reads the metadata for an image"""
