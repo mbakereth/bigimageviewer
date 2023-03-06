@@ -115,11 +115,6 @@ class MainWindow(QMainWindow):
         """ Resizes the viewer to exactly fit the loaded image """
         width = self._viewer.image_width
         height = self._viewer.image_height
-        size = self.size()
-        childsize = self.centralWidget().size()
-        dx = width - childsize.width()
-        dy = height - childsize.height()
-        # self.resize(QSize(width, height))
         self._centralWidgetResize(width, height)
 
     def _centralWidgetResize(self, x, y):

@@ -27,7 +27,6 @@ class ImageLabel(QLabel):
     """
     def __init__(self, parent=None, width=512, height=512):
         super().__init__(parent)
-        self.setStyleSheet("background-color: blue")
         self._initial_width = width
         self._initial_height = height
 
@@ -75,7 +74,6 @@ class BigImageComponent(QLabel):
         """
         super().__init__(parent)
         self.setFrameStyle(QFrame.NoFrame)
-        # self.setStyleSheet("background-color: yellow")
         self._initial_width = width
         self._initial_height = height
         self._image_label = ImageLabel(self, width, height)
@@ -93,8 +91,6 @@ class BigImageComponent(QLabel):
         self._zoom_in_key = BigImageComponent.DEFAULT_ZOOM_IN_KEY
         self._zoom_out_key = BigImageComponent.DEFAULT_ZOOM_OUT_KEY
         self._exit_key = BigImageComponent.DEFAULT_EXIT_KEY
-
-        self.setStyleSheet("background-color: yellow")
 
     @property
     def zoom_in_key(self):
